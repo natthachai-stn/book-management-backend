@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,7 +14,12 @@ export class BookService {
   ) { }
 
   async create(createBookDto: CreateBookDto) {
-    return await this.bookRepository.insert(createBookDto)
+    const result = await this.bookRepository.insert(createBookDto)
+    if (!result) {
+      throw new BadRequestException('Failed to create book');
+    }
+
+    return { message: 'Book created successfully' }
   }
 
   async findAll(query: GetBookDto) {
@@ -24,14 +29,13 @@ export class BookService {
     const [data, total] = await this.bookRepository.findAndCount({
       skip: query.skip,
       take: limit,
-      // order: { created_at: 'DESC' },
+      order: { id: 'asc' },
     });
 
     return {
       data,
       total,
       page,
-      lastPage: Math.ceil(total / limit),
     };
   }
 
@@ -45,7 +49,7 @@ export class BookService {
   }
 
   async remove(id: number) {
-    await this.bookRepository.delete(id);
+    await this.bookRepository.delete({ id });
     return { message: `Book #${id} has been deleted` };
   }
 }
