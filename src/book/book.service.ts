@@ -4,6 +4,7 @@ import { UpdateBookDto } from './dto/update-book.dto';
 import { GetBookDto } from './dto/get-book.dto';
 import { BookRepository } from './book.repository';
 import { responseException } from '../exception/response.exception';
+import { Book } from './entity/book.entity';
 
 @Injectable()
 export class BookService {
@@ -28,7 +29,7 @@ export class BookService {
       order: { id: 'asc' },
     });
     if (!data || !data.length) {
-      return responseException('Book not found');
+      return responseException<Book>('Book not found');
     }
 
     return responseException('Get Book successfully', data, total)
