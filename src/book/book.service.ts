@@ -1,16 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Book } from './entity/book.entity';
-import { Repository } from 'typeorm';
 import { GetBookDto } from './dto/get-book.dto';
+import { BookRepository } from './book.repository';
+import { responseException } from '../exception/response.exception';
 
 @Injectable()
 export class BookService {
   constructor(
-    @InjectRepository(Book)
-    private readonly bookRepository: Repository<Book>,
+    private readonly bookRepository: BookRepository
   ) { }
 
   async create(createBookDto: CreateBookDto) {
@@ -18,12 +16,10 @@ export class BookService {
     if (!result) {
       throw new BadRequestException('Failed to create book');
     }
-
-    return { message: 'Book created successfully' }
+    return responseException('Book created successfully')
   }
 
   async findAll(query: GetBookDto) {
-    const page = query.page || 1;
     const limit = query.pageSize || 10;
 
     const [data, total] = await this.bookRepository.findAndCount({
@@ -31,25 +27,26 @@ export class BookService {
       take: limit,
       order: { id: 'asc' },
     });
+    if (!data || !data.length) {
+      return responseException('Book not found');
+    }
 
-    return {
-      data,
-      total,
-      page,
-    };
-  }
-
-  async findOne(id: number) {
-    return await this.bookRepository.findOneBy({ id });
+    return responseException('Get Book successfully', data, total)
   }
 
   async update(id: number, updateBookDto: UpdateBookDto) {
-    await this.bookRepository.update(id, updateBookDto);
-    return await this.bookRepository.findOneBy({ id });
+    const result = await this.bookRepository.update(id, updateBookDto);
+    if (!result.affected) {
+      throw new NotFoundException('Book not found or update failed');
+    }
+    return responseException('Book updated successfully')
   }
 
   async remove(id: number) {
-    await this.bookRepository.delete({ id });
-    return { message: `Book #${id} has been deleted` };
+    const result = await this.bookRepository.delete(id);
+    if (!result.affected) {
+      throw new NotFoundException('Book not found for delete');
+    }
+    return responseException(`Book #${id} has been deleted`)
   }
 }

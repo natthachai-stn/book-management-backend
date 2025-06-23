@@ -1,6 +1,3 @@
-export class CreateBookDto {
-    title: string
-    author: string
-    published_year: number
-    genre: string
-}
+import { Book } from "../entity/book.entity";
+
+export class CreateBookDto extends Book { }
