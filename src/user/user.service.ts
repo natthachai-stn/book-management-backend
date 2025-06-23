@@ -1,9 +1,10 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { responseException } from 'src/exception/response.exception';
 
 
 @Injectable()
@@ -29,9 +30,7 @@ export class UserService {
       throw new BadRequestException('Failed to create user');
     }
 
-    return {
-      message: 'User created successfully',
-    }
+    return responseException('User created successfully')
   }
 
   async findOne(email: string) {
